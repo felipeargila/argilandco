@@ -3,24 +3,26 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>Argila&Co Symbol Experience</title>
+  <title>Argila&Co Experience V5</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <main id="app">
     <section id="intro" class="screen active">
-      <h1>
-        <span>Algumas empresas acompanham o mercado.</span>
-        <span>Outras definem para onde ele vai.</span>
-      </h1>
-      <button id="startBtn">Avançar</button>
+      <div class="intro-inner">
+        <h1>
+          <span>Algumas empresas acompanham o mercado.</span>
+          <span>Outras definem para onde ele vai.</span>
+        </h1>
+        <button id="startBtn" type="button">Avançar</button>
+      </div>
     </section>
 
     <section id="experience" class="screen">
       <div id="message"></div>
 
-      <div id="symbolStage">
-        <svg id="symbolSvg" viewBox="0 0 500 500" aria-label="Construção geométrica do símbolo">
+      <div id="stage">
+        <svg id="symbolSvg" viewBox="0 0 500 500" aria-label="Construção do símbolo Argila&Co">
           <g id="grid">
             <line x1="0" y1="0" x2="500" y2="0" />
             <line x1="0" y1="100" x2="500" y2="100" />
@@ -28,7 +30,6 @@
             <line x1="0" y1="300" x2="500" y2="300" />
             <line x1="0" y1="400" x2="500" y2="400" />
             <line x1="0" y1="500" x2="500" y2="500" />
-
             <line x1="0" y1="0" x2="0" y2="500" />
             <line x1="100" y1="0" x2="100" y2="500" />
             <line x1="200" y1="0" x2="200" y2="500" />
@@ -38,18 +39,22 @@
           </g>
 
           <g id="targetCircles">
-            <circle data-slot="0" cx="150" cy="150" r="150" />
-            <circle data-slot="1" cx="350" cy="150" r="150" />
-            <circle data-slot="2" cx="350" cy="350" r="150" />
-            <circle data-slot="3" cx="150" cy="350" r="150" />
+            <circle class="target-circle" data-slot="0" cx="150" cy="150" r="150" />
+            <circle class="target-circle" data-slot="1" cx="350" cy="150" r="150" />
+            <circle class="target-circle" data-slot="2" cx="350" cy="350" r="150" />
+            <circle class="target-circle" data-slot="3" cx="150" cy="350" r="150" />
+          </g>
+
+          <g id="slotLabels">
+            <text data-label-slot="0" x="150" y="150">ESTRATÉGIA</text>
+            <text data-label-slot="1" x="350" y="150">IDENTIDADE</text>
+            <text data-label-slot="2" x="350" y="350">EXPERIÊNCIA</text>
+            <text data-label-slot="3" x="150" y="350">COMUNICAÇÃO</text>
           </g>
 
           <g id="finalMark">
-            <!-- Interseção real dos círculos superiores -->
             <path id="petalTop" d="M250 38.1966 A150 150 0 0 1 250 261.8034 A150 150 0 0 1 250 38.1966 Z" />
-            <!-- Interseção real dos círculos da esquerda -->
             <path id="petalLeft" d="M38.1966 250 A150 150 0 0 1 261.8034 250 A150 150 0 0 1 38.1966 250 Z" />
-            <!-- Interseção real dos círculos da direita -->
             <path id="petalRight" d="M238.1966 250 A150 150 0 0 1 461.8034 250 A150 150 0 0 1 238.1966 250 Z" />
           </g>
 
@@ -57,18 +62,13 @@
         </svg>
       </div>
 
-      <div id="pieceLayer">
-        <button class="piece" data-piece="0" data-label="Estratégia" aria-label="Estratégia"></button>
-        <button class="piece" data-piece="1" data-label="Identidade" aria-label="Identidade"></button>
-        <button class="piece" data-piece="2" data-label="Experiência" aria-label="Experiência"></button>
-        <button class="piece" data-piece="3" data-label="Comunicação" aria-label="Comunicação"></button>
-      </div>
+      <svg id="piecesSvg" aria-hidden="true"></svg>
 
-      <p id="instruction">Incline o telefone. Toque, arraste e posicione cada círculo.</p>
+      <p id="instruction">Toque e encaixe os círculos.</p>
     </section>
 
     <section id="home" class="screen">
-      <div>
+      <div class="home-inner">
         <p>Argila&Co</p>
         <h2>Sistema estrutural de diferenciação.</h2>
       </div>

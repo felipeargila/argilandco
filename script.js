@@ -1,11 +1,12 @@
-
 const intro = document.getElementById("intro");
 const experience = document.getElementById("experience");
 const home = document.getElementById("home");
 const startBtn = document.getElementById("startBtn");
-const svg = document.getElementById("symbolSvg");
-const pieces = Array.from(document.querySelectorAll(".piece"));
-const targetCircles = Array.from(document.querySelectorAll("#targetCircles circle"));
+const stage = document.getElementById("stage");
+const symbolSvg = document.getElementById("symbolSvg");
+const piecesSvg = document.getElementById("piecesSvg");
+const targetCircles = Array.from(document.querySelectorAll(".target-circle"));
+const slotLabels = Array.from(document.querySelectorAll("#slotLabels text"));
 const finalMark = document.getElementById("finalMark");
 const zoomCore = document.getElementById("zoomCore");
 const whiteOut = document.getElementById("whiteOut");
@@ -13,13 +14,12 @@ const message = document.getElementById("message");
 
 const GEOMETRY = {
   viewBox: 500,
-  grid: 5,
   radius: 150,
   slots: [
-    { cx: 150, cy: 150, label: "Estratégia" },
-    { cx: 350, cy: 150, label: "Identidade" },
-    { cx: 350, cy: 350, label: "Experiência" },
-    { cx: 150, cy: 350, label: "Comunicação" }
+    { cx: 150, cy: 150, label: "ESTRATÉGIA" },
+    { cx: 350, cy: 150, label: "IDENTIDADE" },
+    { cx: 350, cy: 350, label: "EXPERIÊNCIA" },
+    { cx: 150, cy: 350, label: "COMUNICAÇÃO" }
   ]
 };
 
@@ -28,23 +28,16 @@ const state = {
   ay: 0,
   dragging: null,
   completed: false,
+  startedMotion: false,
   items: []
 };
 
-function clamp(value, min, max) {
-  return Math.max(min, Math.min(max, value));
+function clamp(n, min, max) {
+  return Math.max(min, Math.min(max, n));
 }
 
-function dist(ax, ay, bx, by) {
+function distance(ax, ay, bx, by) {
   return Math.hypot(ax - bx, ay - by);
-}
-
-function screenFromSvg(x, y) {
-  const pt = svg.createSVGPoint();
-  pt.x = x;
-  pt.y = y;
-  const transformed = pt.matrixTransform(svg.getScreenCTM());
-  return { x: transformed.x, y: transformed.y };
 }
 
 function setScreen(el) {
@@ -54,44 +47,65 @@ function setScreen(el) {
   el.classList.add("active");
 }
 
-function pieceSize() {
-  const rect = svg.getBoundingClientRect();
-  const size = rect.width * (GEOMETRY.radius * 2 / GEOMETRY.viewBox);
-  document.documentElement.style.setProperty("--piece-size", size + "px");
-  return size;
+function svgToScreen(x, y) {
+  const pt = symbolSvg.createSVGPoint();
+  pt.x = x;
+  pt.y = y;
+  return pt.matrixTransform(symbolSvg.getScreenCTM());
 }
 
-function positionPiecesAtBase() {
-  const size = pieceSize();
-  const gap = Math.max(10, Math.min(18, window.innerWidth * 0.032));
-  const total = (size * 4) + (gap * 3);
-  const start = (window.innerWidth - total) / 2;
-  const baseY = window.innerHeight - size - Math.max(94, window.innerHeight * 0.12);
+function currentScale() {
+  return symbolSvg.getBoundingClientRect().width / GEOMETRY.viewBox;
+}
 
-  state.items = pieces.map((el, index) => {
+function currentRadius() {
+  return GEOMETRY.radius * currentScale();
+}
+
+function setupPiecesSvg() {
+  piecesSvg.setAttribute("width", window.innerWidth);
+  piecesSvg.setAttribute("height", window.innerHeight);
+  piecesSvg.setAttribute("viewBox", `0 0 ${window.innerWidth} ${window.innerHeight}`);
+}
+
+function createPieces() {
+  piecesSvg.innerHTML = "";
+  const r = currentRadius();
+
+  state.items = GEOMETRY.slots.map((slot, index) => {
+    const node = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+    node.setAttribute("class", "piece-circle");
+    node.setAttribute("r", r);
+    node.setAttribute("data-piece", index);
+    node.setAttribute("aria-label", slot.label);
+    piecesSvg.appendChild(node);
+
     const item = {
       id: index,
-      el,
-      x: start + index * (size + gap),
-      y: baseY,
-      baseX: start + index * (size + gap),
-      baseY,
-      vx: (Math.random() - .5) * .5,
-      vy: (Math.random() - .5) * .5,
-      locked: false,
       slot: null,
-      filled: false
+      label: slot.label,
+      node,
+      x: window.innerWidth / 2,
+      y: -r - (index * r * 0.28),
+      baseX: window.innerWidth * (0.22 + index * 0.185),
+      baseY: window.innerHeight - r - Math.max(74, window.innerHeight * 0.07) + ((index % 2) ? 8 : -5),
+      vx: 0,
+      vy: 0,
+      locked: false,
+      dropping: true,
+      dropDelay: index * 180
     };
 
+    bindPiece(item);
     render(item);
-    el.classList.remove("locked", "dragging");
     return item;
   });
 }
 
 function render(item) {
-  item.el.style.setProperty("--x", item.x + "px");
-  item.el.style.setProperty("--y", item.y + "px");
+  item.node.setAttribute("cx", item.x);
+  item.node.setAttribute("cy", item.y);
+  item.node.setAttribute("r", currentRadius());
 }
 
 async function requestMotionPermission() {
@@ -106,95 +120,56 @@ async function requestMotionPermission() {
 }
 
 function startMotion() {
+  if (state.startedMotion) return;
+  state.startedMotion = true;
+
   window.addEventListener("deviceorientation", (e) => {
     if (state.completed) return;
-    const gamma = e.gamma || 0;
-    const beta = e.beta || 0;
-    state.ax = clamp(gamma / 40, -1, 1);
-    state.ay = clamp(beta / 40, -1, 1);
+    state.ax = clamp((e.gamma || 0) / 32, -1, 1);
+    state.ay = clamp((e.beta || 0) / 32, -1, 1);
   }, true);
 }
 
-function physics() {
-  if (experience.classList.contains("active") && !state.completed) {
-    const size = pieceSize();
-    const minX = 18;
-    const maxX = window.innerWidth - size - 18;
-    const minY = window.innerHeight * .56;
-    const maxY = window.innerHeight - size - Math.max(64, window.innerHeight * .08);
-
-    state.items.forEach((item) => {
-      if (item.locked || item === state.dragging) return;
-
-      item.vx += state.ax * 0.075;
-      item.vy += state.ay * 0.075;
-
-      item.vx += (item.baseX - item.x) * 0.002;
-      item.vy += (item.baseY - item.y) * 0.002;
-
-      item.vx *= 0.925;
-      item.vy *= 0.925;
-
-      item.x += item.vx;
-      item.y += item.vy;
-
-      if (item.x < minX) { item.x = minX; item.vx *= -0.45; }
-      if (item.x > maxX) { item.x = maxX; item.vx *= -0.45; }
-      if (item.y < minY) { item.y = minY; item.vy *= -0.45; }
-      if (item.y > maxY) { item.y = maxY; item.vy *= -0.45; }
-
-      render(item);
-    });
-  }
-
-  requestAnimationFrame(physics);
-}
-
-function getOpenSlots() {
-  return GEOMETRY.slots
-    .map((slot, index) => ({ ...slot, index }))
-    .filter((slot) => !state.items.some((item) => item.locked && item.slot === slot.index));
-}
-
-function nearestSlot(item) {
-  const size = pieceSize();
-  const cx = item.x + size / 2;
-  const cy = item.y + size / 2;
-
+function nearestOpenSlot(item) {
   let best = null;
-  getOpenSlots().forEach((slot) => {
-    const point = screenFromSvg(slot.cx, slot.cy);
-    const d = dist(cx, cy, point.x, point.y);
+  const openSlots = GEOMETRY.slots
+    .map((slot, index) => ({...slot, index}))
+    .filter(slot => !state.items.some(item => item.locked && item.slot === slot.index));
 
-    if (!best || d < best.distance) {
-      best = { ...slot, x: point.x, y: point.y, distance: d };
+  openSlots.forEach(slot => {
+    const p = svgToScreen(slot.cx, slot.cy);
+    const d = distance(item.x, item.y, p.x, p.y);
+    if (!best || d < best.d) {
+      best = { ...slot, x: p.x, y: p.y, d };
     }
   });
 
   return best;
 }
 
-function lockToSlot(item, slot) {
-  const size = pieceSize();
+function lockItem(item, slot) {
   item.locked = true;
   item.slot = slot.index;
-  item.x = slot.x - size / 2;
-  item.y = slot.y - size / 2;
+  item.x = slot.x;
+  item.y = slot.y;
   item.vx = 0;
   item.vy = 0;
 
-  item.el.classList.remove("dragging");
-  item.el.classList.add("locked");
+  item.node.classList.remove("dragging");
+  item.node.classList.add("locked");
+  item.node.style.pointerEvents = "none";
+
   targetCircles[slot.index].classList.add("locked");
+  slotLabels[slot.index].classList.add("show");
 
   render(item);
 
   if (navigator.vibrate) navigator.vibrate(45);
-  checkCompletion();
+  checkComplete();
 }
 
-function checkCompletion() {
-  if (!state.items.every((item) => item.locked)) return;
+function checkComplete() {
+  if (!state.items.every(item => item.locked)) return;
 
   state.completed = true;
   document.body.classList.add("completed");
@@ -203,12 +178,12 @@ function checkCompletion() {
     finalMark.classList.add("revealed");
     zoomCore.classList.add("on");
     if (navigator.vibrate) navigator.vibrate([45, 40, 80]);
-  }, 240);
+  }, 260);
 
   setTimeout(() => {
     message.innerHTML = "Você já chegou até aqui.<br>Agora é hora de buscar novos horizontes.";
     message.classList.add("show");
-  }, 950);
+  }, 980);
 
   setTimeout(() => {
     document.body.classList.add("zooming");
@@ -217,74 +192,128 @@ function checkCompletion() {
 
   setTimeout(() => {
     setScreen(home);
-  }, 3550);
+  }, 3580);
 }
 
-function bindDragging() {
-  pieces.forEach((el, index) => {
-    el.addEventListener("pointerdown", (event) => {
-      const item = state.items[index];
-      if (!item || item.locked || state.completed) return;
+function bindPiece(item) {
+  item.node.addEventListener("pointerdown", (event) => {
+    if (item.locked || state.completed) return;
 
-      state.dragging = item;
-      item.offsetX = event.clientX - item.x;
-      item.offsetY = event.clientY - item.y;
-      item.vx = 0;
-      item.vy = 0;
+    item.node.setPointerCapture(event.pointerId);
+    state.dragging = item;
+    item.dragOffsetX = event.clientX - item.x;
+    item.dragOffsetY = event.clientY - item.y;
+    item.vx = 0;
+    item.vy = 0;
+    item.dropping = false;
+    item.node.classList.add("dragging");
+  });
 
-      el.classList.add("dragging");
-      el.setPointerCapture(event.pointerId);
-    });
+  item.node.addEventListener("pointermove", (event) => {
+    if (state.dragging !== item || item.locked) return;
 
-    el.addEventListener("pointermove", (event) => {
-      const item = state.items[index];
-      if (state.dragging !== item || item.locked) return;
+    item.x = event.clientX - item.dragOffsetX;
+    item.y = event.clientY - item.dragOffsetY;
 
-      item.x = event.clientX - item.offsetX;
-      item.y = event.clientY - item.offsetY;
+    const slot = nearestOpenSlot(item);
+    const snapDistance = currentRadius() * 0.62;
 
-      const slot = nearestSlot(item);
-      if (slot && slot.distance < pieceSize() * .72) {
-        const size = pieceSize();
-        const targetX = slot.x - size / 2;
-        const targetY = slot.y - size / 2;
-        item.x += (targetX - item.x) * .18;
-        item.y += (targetY - item.y) * .18;
+    if (slot && slot.d < snapDistance) {
+      item.x += (slot.x - item.x) * 0.20;
+      item.y += (slot.y - item.y) * 0.20;
+    }
+
+    render(item);
+  });
+
+  const release = () => {
+    if (state.dragging !== item || item.locked) return;
+
+    state.dragging = null;
+    item.node.classList.remove("dragging");
+
+    const slot = nearestOpenSlot(item);
+    if (slot && slot.d < currentRadius() * 0.42) {
+      lockItem(item, slot);
+    }
+  };
+
+  item.node.addEventListener("pointerup", release);
+  item.node.addEventListener("pointercancel", release);
+}
+
+function animate(timestamp) {
+  if (experience.classList.contains("active") && !state.completed) {
+    const r = currentRadius();
+    const minX = r + 12;
+    const maxX = window.innerWidth - r - 12;
+    const maxY = window.innerHeight - r - Math.max(34, window.innerHeight * 0.035);
+    const minY = window.innerHeight * 0.52;
+
+    state.items.forEach(item => {
+      if (item.locked || state.dragging === item) return;
+
+      if (item.dropDelay > 0) {
+        item.dropDelay -= 16.7;
+        render(item);
+        return;
+      }
+
+      if (item.dropping) {
+        item.vy += 1.10;
+        item.y += item.vy;
+
+        if (item.y >= item.baseY) {
+          item.y = item.baseY;
+          item.vy *= -0.42;
+
+          if (Math.abs(item.vy) < 2.1) {
+            item.vy = 0;
+            item.dropping = false;
+          }
+
+          if (navigator.vibrate && Math.abs(item.vy) > 3) navigator.vibrate(18);
+        }
+
+        item.x += (item.baseX - item.x) * 0.09;
+      } else {
+        item.vx += state.ax * 0.18;
+        item.vy += state.ay * 0.18;
+
+        item.vx += (item.baseX - item.x) * 0.004;
+        item.vy += (item.baseY - item.y) * 0.004;
+
+        item.vx *= 0.91;
+        item.vy *= 0.91;
+
+        item.x += item.vx;
+        item.y += item.vy;
+
+        if (item.x < minX) { item.x = minX; item.vx *= -0.42; }
+        if (item.x > maxX) { item.x = maxX; item.vx *= -0.42; }
+        if (item.y < minY) { item.y = minY; item.vy *= -0.42; }
+        if (item.y > maxY) { item.y = maxY; item.vy *= -0.42; }
       }
 
       render(item);
     });
+  }
 
-    function release() {
-      const item = state.items[index];
-      if (state.dragging !== item || item.locked) return;
-
-      el.classList.remove("dragging");
-      state.dragging = null;
-
-      const slot = nearestSlot(item);
-      if (slot && slot.distance < pieceSize() * .44) {
-        lockToSlot(item, slot);
-      }
-    }
-
-    el.addEventListener("pointerup", release);
-    el.addEventListener("pointercancel", release);
-  });
+  requestAnimationFrame(animate);
 }
 
 startBtn.addEventListener("click", async () => {
   await requestMotionPermission();
   setScreen(experience);
-  positionPiecesAtBase();
+  setupPiecesSvg();
+  createPieces();
   startMotion();
 });
 
 window.addEventListener("resize", () => {
-  if (experience.classList.contains("active") && !state.completed) {
-    positionPiecesAtBase();
-  }
+  if (!experience.classList.contains("active") || state.completed) return;
+  setupPiecesSvg();
+  createPieces();
 });
 
-bindDragging();
-requestAnimationFrame(physics);
+requestAnimationFrame(animate);
