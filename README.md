@@ -1,31 +1,22 @@
-# Branding Experience Prototype
+# Branding Experience V0.2
 
-Protótipo mobile-first para testar uma entrada interativa usando sensores do smartphone.
+Protótipo estático para GitHub Pages.
 
-## Como testar
+## Como publicar
 
-1. Suba este projeto em um repositório no GitHub.
-2. Ative o GitHub Pages.
-3. Abra a URL HTTPS no celular.
-4. Toque em "Começar experiência".
-5. No iPhone, aceite a permissão de movimento/orientação.
+1. Substitua os arquivos do repositório pelos arquivos deste ZIP.
+2. Faça commit e push.
+3. Abra a URL do GitHub Pages no Safari do iPhone.
+4. Toque em **Avançar**.
+5. Aceite a permissão de movimento/orientação.
+6. Incline o telefone para posicionar o eixo.
 
-## Desktop
+## Fallback desktop
 
-No computador, clique e arraste o núcleo até o centro.
+No desktop, arraste o eixo com o mouse ou mova o cursor para simular inclinação.
 
 ## Arquivos
 
-- `index.html`: estrutura da página
-- `style.css`: visual do protótipo
-- `script.js`: sensores, física, colisão e encaixe
-
-## Ajustes rápidos
-
-No arquivo `script.js`, altere o objeto `CONFIG`:
-
-- `sensorForce`: sensibilidade do acelerômetro
-- `friction`: atrito do movimento
-- `bounce`: força do rebote na borda
-- `magnetDistance`: distância em que o centro começa a puxar
-- `lockDistance`: distância necessária para encaixar
+- `index.html`
+- `style.css`
+- `script.js`

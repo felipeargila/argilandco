@@ -2,40 +2,66 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Experiência de Marca | Protótipo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Argila&Co | Experiência</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <main class="app">
-    <section class="intro" id="intro">
-      <p class="eyebrow">Protótipo interativo</p>
-      <h1>Sua marca perdeu o eixo.</h1>
-      <p class="lead">Incline o telefone para reposicionar o núcleo.</p>
-      <button id="startButton" class="primary-button">Começar experiência</button>
-      <p class="hint">No computador, clique e arraste o núcleo.</p>
+  <main id="app">
+    <section id="intro" class="screen screen--active" aria-label="Introdução">
+      <div class="intro__content">
+        <p class="eyebrow">Argila&Co</p>
+        <h1>
+          <span>Algumas empresas acompanham o mercado.</span>
+          <span>Outras definem para onde ele vai.</span>
+        </h1>
+        <button id="startButton" class="text-button" type="button">Avançar</button>
+        <p id="permissionHint" class="permission-hint" aria-live="polite"></p>
+      </div>
     </section>
 
-    <section class="experience hidden" id="experience" aria-label="Experiência interativa">
-      <div class="status" id="status">Incline o telefone até encontrar o centro.</div>
+    <section id="experience" class="screen" aria-label="Bússola interativa">
+      <div id="completionText" class="completion-text" aria-live="polite">
+        <span>Você já chegou até aqui.</span>
+        <span>Agora é hora de buscar novos horizontes.</span>
+      </div>
 
-      <div class="compass-wrap">
-        <div class="compass" id="compass">
-          <div class="ring ring-outer"></div>
-          <div class="ring ring-inner"></div>
-          <div class="axis axis-x"></div>
-          <div class="axis axis-y"></div>
-          <div class="north">N</div>
-          <div class="target" id="target"></div>
-          <div class="core" id="core" role="img" aria-label="Núcleo solto"></div>
+      <div id="stage" class="stage">
+        <div id="compass" class="compass" aria-label="Bússola de marca">
+          <span class="compass__label compass__label--top">NEGÓCIO</span>
+          <span class="compass__label compass__label--left">MARCA</span>
+          <span class="compass__label compass__label--right">INOVAÇÃO</span>
+          <span class="compass__label compass__label--bottom">CULTURA</span>
+
+          <div class="compass__ring compass__ring--outer"></div>
+          <div class="compass__ring compass__ring--middle"></div>
+          <div class="compass__ring compass__ring--inner"></div>
+
+          <div class="compass__tick compass__tick--top"></div>
+          <div class="compass__tick compass__tick--right"></div>
+          <div class="compass__tick compass__tick--bottom"></div>
+          <div class="compass__tick compass__tick--left"></div>
+
+          <div id="target" class="target"></div>
+          <div id="axis" class="axis" role="img" aria-label="Eixo móvel">
+            <div class="axis__line"></div>
+            <div class="axis__core"></div>
+          </div>
         </div>
       </div>
 
-      <div class="complete hidden" id="complete">
-        <p>O eixo foi encontrado.</p>
-        <button class="secondary-button" id="resetButton">Testar de novo</button>
+      <p id="instruction" class="instruction">Incline o telefone para posicionar o eixo.</p>
+    </section>
+
+    <section id="website" class="website" aria-label="Site">
+      <div class="website__content">
+        <p class="eyebrow eyebrow--dark">Sistema estrutural de diferenciação</p>
+        <h2>Branding para empresas que querem caminhar para outros níveis.</h2>
+        <p>Estratégia, identidade e experiência conectadas para construir marcas mais claras, fortes e difíceis de ignorar.</p>
       </div>
     </section>
+
+    <div id="whiteTransition" class="white-transition"></div>
   </main>
 
   <script src="script.js"></script>

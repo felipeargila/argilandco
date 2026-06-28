@@ -1,253 +1,266 @@
-const intro = document.getElementById("intro");
-const experience = document.getElementById("experience");
-const startButton = document.getElementById("startButton");
-const resetButton = document.getElementById("resetButton");
-const compass = document.getElementById("compass");
-const core = document.getElementById("core");
-const status = document.getElementById("status");
-const complete = document.getElementById("complete");
+const intro = document.getElementById('intro');
+const experience = document.getElementById('experience');
+const website = document.getElementById('website');
+const startButton = document.getElementById('startButton');
+const permissionHint = document.getElementById('permissionHint');
+const compass = document.getElementById('compass');
+const stage = document.getElementById('stage');
+const axis = document.getElementById('axis');
+const instruction = document.getElementById('instruction');
+const completionText = document.getElementById('completionText');
+const whiteTransition = document.getElementById('whiteTransition');
 
 const state = {
-  started: false,
+  running: false,
   locked: false,
   dragging: false,
-  raf: null,
-  size: 0,
-  radius: 0,
-  coreRadius: 17,
-  targetRadius: 18,
-  x: 72,
-  y: 72,
+  pointerId: null,
+  size: 420,
+  radius: 210,
+  x: 0,
+  y: 0,
   vx: 0,
   vy: 0,
-  gravityX: 0,
-  gravityY: 0,
+  gx: 0,
+  gy: 0.14,
   lastTime: performance.now(),
+  desktopTiltX: 0,
+  desktopTiltY: 0
 };
 
-const CONFIG = {
-  sensorForce: 0.00135,
-  desktopForce: 0.0011,
-  friction: 0.988,
-  bounce: 0.46,
-  maxSpeed: 1.18,
-  magnetDistance: 86,
-  lockDistance: 14,
-  magnetForce: 0.00095,
-};
-
-function measure() {
-  const rect = compass.getBoundingClientRect();
-  state.size = rect.width;
-  state.radius = rect.width / 2 - state.coreRadius - 15;
-}
-
-function center() {
-  return {
-    x: state.size / 2,
-    y: state.size / 2,
-  };
-}
-
-function setCorePosition() {
-  core.style.transform = `translate3d(${state.x - state.coreRadius}px, ${state.y - state.coreRadius}px, 0)`;
-}
-
-function resetExperience() {
-  measure();
-  const c = center();
-  state.locked = false;
-  state.x = c.x - state.size * 0.28;
-  state.y = c.y - state.size * 0.22;
+function randomStart() {
+  const angle = Math.random() * Math.PI * 2;
+  const distance = state.radius * (0.34 + Math.random() * 0.20);
+  state.x = Math.cos(angle) * distance;
+  state.y = Math.sin(angle) * distance;
   state.vx = 0;
   state.vy = 0;
-  state.gravityX = 0;
-  state.gravityY = 0;
-  compass.classList.remove("locked");
-  complete.classList.add("hidden");
-  status.textContent = "Incline o telefone até encontrar o centro.";
-  setCorePosition();
 }
 
-async function requestMotionPermission() {
-  const deviceOrientation = window.DeviceOrientationEvent;
-
-  if (deviceOrientation && typeof deviceOrientation.requestPermission === "function") {
-    const permission = await deviceOrientation.requestPermission();
-    return permission === "granted";
-  }
-
-  return true;
+function updateMeasurements() {
+  const rect = compass.getBoundingClientRect();
+  state.size = rect.width;
+  state.radius = rect.width / 2;
 }
 
-async function start() {
-  const granted = await requestMotionPermission();
-
-  if (!granted) {
-    status.textContent = "Permissão negada. No desktop, você ainda pode arrastar o núcleo.";
-    return;
-  }
-
-  intro.classList.add("hidden");
-  experience.classList.remove("hidden");
-  state.started = true;
-
-  requestAnimationFrame(() => {
-    resetExperience();
-    bindMotion();
-    bindPointerFallback();
-    animate(performance.now());
-  });
+function render() {
+  axis.style.transform = `translate(-50%, -50%) translate(${state.x}px, ${state.y}px)`;
 }
 
-function bindMotion() {
-  window.addEventListener("deviceorientation", (event) => {
-    if (!state.started || state.dragging || state.locked) return;
-
-    const gamma = event.gamma || 0; // esquerda/direita
-    const beta = event.beta || 0; // frente/trás
-
-    state.gravityX = clamp(gamma, -35, 35) * CONFIG.sensorForce;
-    state.gravityY = clamp(beta - 35, -35, 35) * CONFIG.sensorForce;
-  }, true);
-}
-
-function bindPointerFallback() {
-  let pointerId = null;
-
-  core.addEventListener("pointerdown", (event) => {
-    if (state.locked) return;
-    state.dragging = true;
-    pointerId = event.pointerId;
-    core.setPointerCapture(pointerId);
-    state.vx = 0;
-    state.vy = 0;
-  });
-
-  core.addEventListener("pointermove", (event) => {
-    if (!state.dragging || event.pointerId !== pointerId) return;
-    const rect = compass.getBoundingClientRect();
-    state.x = event.clientX - rect.left;
-    state.y = event.clientY - rect.top;
-    keepInsideCircle();
-    setCorePosition();
-    checkLock();
-  });
-
-  core.addEventListener("pointerup", (event) => {
-    if (event.pointerId !== pointerId) return;
-    state.dragging = false;
-    pointerId = null;
-  });
-
-  compass.addEventListener("pointermove", (event) => {
-    if (state.started && !state.dragging && !state.locked && !hasTouch()) {
-      const rect = compass.getBoundingClientRect();
-      const c = center();
-      const mx = event.clientX - rect.left;
-      const my = event.clientY - rect.top;
-      state.gravityX = (mx - c.x) * CONFIG.desktopForce;
-      state.gravityY = (my - c.y) * CONFIG.desktopForce;
+function clampToCompass() {
+  const bodyRadius = 18;
+  const max = state.radius - bodyRadius - 10;
+  const distance = Math.hypot(state.x, state.y);
+  if (distance > max) {
+    const nx = state.x / distance;
+    const ny = state.y / distance;
+    state.x = nx * max;
+    state.y = ny * max;
+    const normalVelocity = state.vx * nx + state.vy * ny;
+    if (normalVelocity > 0) {
+      state.vx -= (1.62 * normalVelocity) * nx;
+      state.vy -= (1.62 * normalVelocity) * ny;
     }
-  });
+    state.vx *= 0.72;
+    state.vy *= 0.72;
+  }
 }
 
-function animate(now) {
-  const dt = Math.min(now - state.lastTime, 32);
-  state.lastTime = now;
+function physicsStep(dt) {
+  if (state.dragging || state.locked) return;
 
-  if (!state.dragging && !state.locked) {
-    applyPhysics(dt);
-    checkLock();
-    setCorePosition();
+  const distance = Math.hypot(state.x, state.y);
+  const snapZone = Math.max(34, state.radius * 0.105);
+
+  let ax = state.gx;
+  let ay = state.gy;
+
+  if (distance < snapZone) {
+    const magnet = (1 - distance / snapZone) * 0.42;
+    ax += -state.x * magnet * 0.035;
+    ay += -state.y * magnet * 0.035;
   }
 
-  state.raf = requestAnimationFrame(animate);
-}
+  state.vx += ax * dt;
+  state.vy += ay * dt;
 
-function applyPhysics(dt) {
-  const c = center();
-  const dx = c.x - state.x;
-  const dy = c.y - state.y;
-  const distance = Math.hypot(dx, dy);
-
-  state.vx += state.gravityX * dt;
-  state.vy += state.gravityY * dt;
-
-  if (distance < CONFIG.magnetDistance) {
-    state.vx += dx * CONFIG.magnetForce * dt;
-    state.vy += dy * CONFIG.magnetForce * dt;
-    status.textContent = "Quase. O centro começou a puxar.";
-  } else {
-    status.textContent = "Incline o telefone até encontrar o centro.";
-  }
-
-  state.vx *= CONFIG.friction;
-  state.vy *= CONFIG.friction;
-
-  state.vx = clamp(state.vx, -CONFIG.maxSpeed, CONFIG.maxSpeed);
-  state.vy = clamp(state.vy, -CONFIG.maxSpeed, CONFIG.maxSpeed);
+  const friction = Math.pow(0.986, dt);
+  state.vx *= friction;
+  state.vy *= friction;
 
   state.x += state.vx * dt;
   state.y += state.vy * dt;
 
-  keepInsideCircle();
-}
+  clampToCompass();
 
-function keepInsideCircle() {
-  const c = center();
-  const dx = state.x - c.x;
-  const dy = state.y - c.y;
-  const distance = Math.hypot(dx, dy);
-
-  if (distance > state.radius) {
-    const nx = dx / distance;
-    const ny = dy / distance;
-
-    state.x = c.x + nx * state.radius;
-    state.y = c.y + ny * state.radius;
-
-    const dot = state.vx * nx + state.vy * ny;
-    state.vx -= (1 + CONFIG.bounce) * dot * nx;
-    state.vy -= (1 + CONFIG.bounce) * dot * ny;
+  if (distance < 13 && Math.hypot(state.vx, state.vy) < 0.78) {
+    lockAxis();
   }
 }
 
-function checkLock() {
-  const c = center();
-  const distance = Math.hypot(state.x - c.x, state.y - c.y);
+function loop(now) {
+  const dt = Math.min(32, now - state.lastTime) / 16.67;
+  state.lastTime = now;
 
-  if (distance <= CONFIG.lockDistance) {
-    lockCore();
+  if (state.running) {
+    if (!hasMotionInput() && !state.dragging && !state.locked) {
+      state.gx = state.desktopTiltX;
+      state.gy = state.desktopTiltY + 0.05;
+    }
+    physicsStep(dt);
+    render();
   }
+
+  requestAnimationFrame(loop);
 }
 
-function lockCore() {
+let receivedMotion = false;
+function hasMotionInput() { return receivedMotion; }
+
+function handleOrientation(event) {
   if (state.locked) return;
+  receivedMotion = true;
+  const gamma = event.gamma || 0;
+  const beta = event.beta || 0;
+  state.gx = gamma * 0.020;
+  state.gy = beta * 0.018;
+}
 
-  const c = center();
+function handleMotion(event) {
+  if (state.locked) return;
+  const acc = event.accelerationIncludingGravity;
+  if (!acc) return;
+  receivedMotion = true;
+  state.gx = (acc.x || 0) * -0.030;
+  state.gy = (acc.y || 0) * 0.030;
+}
+
+function startDesktopFallback() {
+  window.addEventListener('mousemove', (event) => {
+    if (receivedMotion || state.locked) return;
+    const cx = window.innerWidth / 2;
+    const cy = window.innerHeight / 2;
+    state.desktopTiltX = ((event.clientX - cx) / cx) * 0.22;
+    state.desktopTiltY = ((event.clientY - cy) / cy) * 0.22;
+  });
+}
+
+async function requestSensorPermission() {
+  try {
+    if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
+      const response = await DeviceMotionEvent.requestPermission();
+      return response === 'granted';
+    }
+    if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+      const response = await DeviceOrientationEvent.requestPermission();
+      return response === 'granted';
+    }
+    return true;
+  } catch (error) {
+    return false;
+  }
+}
+
+async function startExperience() {
+  startButton.disabled = true;
+  permissionHint.textContent = '';
+
+  const allowed = await requestSensorPermission();
+  if (!allowed) {
+    permissionHint.textContent = 'Permissão não liberada. No desktop, você pode arrastar o eixo com o mouse.';
+  }
+
+  intro.classList.remove('screen--active');
+  experience.classList.add('screen--active');
+
+  updateMeasurements();
+  randomStart();
+  render();
+
+  state.running = true;
+  state.lastTime = performance.now();
+
+  window.addEventListener('deviceorientation', handleOrientation, true);
+  window.addEventListener('devicemotion', handleMotion, true);
+  startDesktopFallback();
+}
+
+function lockAxis() {
+  if (state.locked) return;
   state.locked = true;
-  state.x = c.x;
-  state.y = c.y;
+  state.x = 0;
+  state.y = 0;
   state.vx = 0;
   state.vy = 0;
+  render();
+  axis.classList.add('is-locked');
+  instruction.classList.add('is-hidden');
 
-  compass.classList.add("locked");
-  status.textContent = "Encaixou.";
-  complete.classList.remove("hidden");
-  setCorePosition();
+  if (navigator.vibrate) navigator.vibrate([70, 40, 120]);
 
-  if (navigator.vibrate) navigator.vibrate([50, 30, 90]);
+  setTimeout(() => {
+    completionText.classList.add('is-visible');
+  }, 180);
+
+  setTimeout(() => {
+    stage.classList.add('is-zooming');
+    whiteTransition.classList.add('is-active');
+  }, 1450);
+
+  setTimeout(() => {
+    website.classList.add('is-visible');
+    experience.classList.remove('screen--active');
+  }, 2520);
+
+  setTimeout(() => {
+    whiteTransition.classList.add('is-fading');
+  }, 2870);
 }
 
-function clamp(value, min, max) {
-  return Math.max(min, Math.min(max, value));
+function pointerPosition(event) {
+  const rect = compass.getBoundingClientRect();
+  return {
+    x: event.clientX - rect.left - rect.width / 2,
+    y: event.clientY - rect.top - rect.height / 2
+  };
 }
 
-function hasTouch() {
-  return navigator.maxTouchPoints && navigator.maxTouchPoints > 0;
-}
+axis.addEventListener('pointerdown', (event) => {
+  if (state.locked) return;
+  state.dragging = true;
+  state.pointerId = event.pointerId;
+  axis.setPointerCapture(event.pointerId);
+});
 
-startButton.addEventListener("click", start);
-resetButton.addEventListener("click", resetExperience);
-window.addEventListener("resize", resetExperience);
+axis.addEventListener('pointermove', (event) => {
+  if (!state.dragging || state.pointerId !== event.pointerId || state.locked) return;
+  const pos = pointerPosition(event);
+  state.x = pos.x;
+  state.y = pos.y;
+  state.vx = 0;
+  state.vy = 0;
+  clampToCompass();
+  render();
+  if (Math.hypot(state.x, state.y) < 14) lockAxis();
+});
+
+axis.addEventListener('pointerup', (event) => {
+  if (state.pointerId === event.pointerId) {
+    state.dragging = false;
+    state.pointerId = null;
+  }
+});
+
+axis.addEventListener('pointercancel', () => {
+  state.dragging = false;
+  state.pointerId = null;
+});
+
+window.addEventListener('resize', () => {
+  updateMeasurements();
+  clampToCompass();
+  render();
+});
+
+startButton.addEventListener('click', startExperience);
+requestAnimationFrame(loop);
