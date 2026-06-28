@@ -9,7 +9,6 @@ const targetCircles = Array.from(document.querySelectorAll(".target-circle"));
 const slotLabels = Array.from(document.querySelectorAll("#slotLabels text"));
 const finalMark = document.getElementById("finalMark");
 const zoomCore = document.getElementById("zoomCore");
-const whiteOut = document.getElementById("whiteOut");
 const message = document.getElementById("message");
 
 const GEOMETRY = {
@@ -182,25 +181,19 @@ function checkComplete() {
 
   setTimeout(() => {
     document.body.classList.add("copy-phase");
-    message.innerHTML=`<span class="message-title">Marcas criam realidades.<br>Eu crio marcas.</span>`;
+    message.innerHTML=`<span class="message-title">Marcas criam<br>realidades.<br>Eu crio marcas.</span>`;
     message.classList.add("show");
   }, 1150);
 
-  // tempo de leitura antes da transição branca
+  // tempo de leitura antes da transição feita pelo próprio símbolo
   setTimeout(() => {
     document.body.classList.add("zooming");
-    whiteOut.classList.add("go");
   }, 4200);
 
-  // home/menu aparece atrás da tela branca
+  // quando o símbolo já cobriu a tela, entra o menu final
   setTimeout(() => {
     setScreen(home);
-  }, 5200);
-
-  // branco desaparece, mantendo a frase principal em preto e revelando o menu
-  setTimeout(() => {
-    whiteOut.classList.add("fade");
-  }, 5500);
+  }, 5350);
 }
 
 function bindPiece(item) {
