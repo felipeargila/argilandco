@@ -1,61 +1,95 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>Argila&Co | Experiência</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Argila&Co Experience V3.1</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <main id="app">
-    <section id="intro" class="screen is-active">
+    <section id="intro" class="screen active">
       <div class="intro-copy">
         <h1>
           <span>Algumas empresas acompanham o mercado.</span>
           <span>Outras definem para onde ele vai.</span>
         </h1>
-        <button id="startBtn" class="plain-button" type="button">Avançar</button>
+        <button id="startBtn" type="button">Avançar</button>
       </div>
     </section>
 
-    <section id="experience" class="screen" aria-label="Experiência interativa">
-      <div class="top-message" id="topMessage">
-        <h2>Você já chegou até aqui.</h2>
-        <p>Agora é hora de buscar novos horizontes.</p>
+    <section id="experience" class="screen">
+      <div id="message" aria-live="polite"></div>
+
+      <div class="stage-wrap">
+        <svg id="symbolSvg" viewBox="0 0 1000 1000" aria-label="Construção do símbolo Argila&Co">
+          <defs>
+            <filter id="softGlow" x="-30%" y="-30%" width="160%" height="160%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+          </defs>
+
+          <!-- Grid matemático 5x5 -->
+          <g id="grid">
+            <line x1="0" y1="0" x2="0" y2="1000" />
+            <line x1="200" y1="0" x2="200" y2="1000" />
+            <line x1="400" y1="0" x2="400" y2="1000" />
+            <line x1="600" y1="0" x2="600" y2="1000" />
+            <line x1="800" y1="0" x2="800" y2="1000" />
+            <line x1="1000" y1="0" x2="1000" y2="1000" />
+
+            <line x1="0" y1="0" x2="1000" y2="0" />
+            <line x1="0" y1="200" x2="1000" y2="200" />
+            <line x1="0" y1="400" x2="1000" y2="400" />
+            <line x1="0" y1="600" x2="1000" y2="600" />
+            <line x1="0" y1="800" x2="1000" y2="800" />
+            <line x1="0" y1="1000" x2="1000" y2="1000" />
+          </g>
+
+          <!-- Alvos exatos: raio 300, centros: 300/300, 700/300, 700/700, 300/700 -->
+          <g id="targets">
+            <circle class="target" data-slot="0" cx="300" cy="300" r="300" />
+            <circle class="target" data-slot="1" cx="700" cy="300" r="300" />
+            <circle class="target" data-slot="2" cx="700" cy="700" r="300" />
+            <circle class="target" data-slot="3" cx="300" cy="700" r="300" />
+          </g>
+
+          <!-- Interseções reais entre os círculos: símbolo final -->
+          <g id="mark">
+            <!-- Lente superior: interseção dos dois círculos superiores -->
+            <path id="petalTop" d="M 500 76.393 C 667.0 160.0 667.0 440.0 500 523.607 C 333.0 440.0 333.0 160.0 500 76.393 Z" />
+            <!-- Lente esquerda: interseção dos dois círculos da esquerda -->
+            <path id="petalLeft" d="M 76.393 500 C 160.0 333.0 440.0 333.0 523.607 500 C 440.0 667.0 160.0 667.0 76.393 500 Z" />
+            <!-- Lente direita: interseção dos dois círculos da direita -->
+            <path id="petalRight" d="M 476.393 500 C 560.0 333.0 840.0 333.0 923.607 500 C 840.0 667.0 560.0 667.0 476.393 500 Z" />
+          </g>
+
+          <circle id="whiteCore" cx="500" cy="500" r="18" />
+        </svg>
       </div>
 
-      <div class="stage" id="stage">
-        <div class="grid-wrap" id="gridWrap">
-          <div class="grid-lines" aria-hidden="true"></div>
-          <div class="symbol-fill" id="symbolFill" aria-hidden="true">
-            <div class="fill-circle fill-a"></div>
-            <div class="fill-circle fill-b"></div>
-            <div class="fill-circle fill-c"></div>
-            <div class="fill-circle fill-d"></div>
-          </div>
-          <div class="center-light" id="centerLight" aria-hidden="true"></div>
-          <div class="slot slot-a" data-slot="estrategia"><span>Estratégia</span></div>
-          <div class="slot slot-b" data-slot="identidade"><span>Identidade</span></div>
-          <div class="slot slot-c" data-slot="experiencia"><span>Experiência</span></div>
-          <div class="slot slot-d" data-slot="comunicacao"><span>Comunicação</span></div>
-        </div>
-
-        <div class="piece piece-a" data-piece="estrategia"><span>Estratégia</span></div>
-        <div class="piece piece-b" data-piece="identidade"><span>Identidade</span></div>
-        <div class="piece piece-c" data-piece="experiencia"><span>Experiência</span></div>
-        <div class="piece piece-d" data-piece="comunicacao"><span>Comunicação</span></div>
+      <div id="piecesLayer">
+        <div class="piece" data-piece="0" data-label="Estratégia"></div>
+        <div class="piece" data-piece="1" data-label="Identidade"></div>
+        <div class="piece" data-piece="2" data-label="Experiência"></div>
+        <div class="piece" data-piece="3" data-label="Comunicação"></div>
       </div>
 
-      <p class="hint" id="hint">Incline o telefone. Toque, arraste e posicione cada círculo.</p>
+      <p id="instruction">Incline o telefone. Toque, arraste e posicione cada círculo.</p>
     </section>
 
-    <section id="site" class="screen website">
-      <div class="website-content">
-        <p class="eyebrow">Argila&Co</p>
+    <section id="home" class="screen">
+      <div class="home-copy">
+        <p>Argila&Co</p>
         <h2>Sistema estrutural de diferenciação.</h2>
-        <p>Estratégia, identidade, experiência e comunicação alinhadas para marcas que querem caminhar para outros níveis.</p>
       </div>
     </section>
+
+    <div id="whiteTransition"></div>
   </main>
 
   <script src="script.js"></script>

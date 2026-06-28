@@ -1,289 +1,316 @@
-const intro = document.getElementById('intro');
-const experience = document.getElementById('experience');
-const site = document.getElementById('site');
-const startBtn = document.getElementById('startBtn');
-const stage = document.getElementById('stage');
-const gridWrap = document.getElementById('gridWrap');
-const symbolFill = document.getElementById('symbolFill');
-const centerLight = document.getElementById('centerLight');
-const topMessage = document.getElementById('topMessage');
-const hint = document.getElementById('hint');
-
-const pieces = [...document.querySelectorAll('.piece')];
-const slots = [...document.querySelectorAll('.slot')];
+const intro = document.getElementById("intro");
+const experience = document.getElementById("experience");
+const home = document.getElementById("home");
+const startBtn = document.getElementById("startBtn");
+const pieces = Array.from(document.querySelectorAll(".piece"));
+const svg = document.getElementById("symbolSvg");
+const targets = Array.from(document.querySelectorAll(".target"));
+const mark = document.getElementById("mark");
+const whiteCore = document.getElementById("whiteCore");
+const whiteTransition = document.getElementById("whiteTransition");
+const message = document.getElementById("message");
+const instruction = document.getElementById("instruction");
 
 const state = {
-  running:false,
-  orientation:{x:0,y:0},
-  pointer:null,
-  complete:false,
-  lastTime:performance.now(),
-  bounds:null,
-  gridRect:null,
+  ax: 0,
+  ay: 0,
+  dragging: null,
+  completed: false,
+  slots: [
+    { cx: 300, cy: 300, label: "Estratégia", filled: false },
+    { cx: 700, cy: 300, label: "Identidade", filled: false },
+    { cx: 700, cy: 700, label: "Experiência", filled: false },
+    { cx: 300, cy: 700, label: "Comunicação", filled: false }
+  ],
+  items: []
 };
 
-const slotMap = {
-  estrategia: '.slot-a',
-  identidade: '.slot-b',
-  experiencia: '.slot-c',
-  comunicacao: '.slot-d'
-};
+function clamp(n, min, max) {
+  return Math.max(min, Math.min(max, n));
+}
 
-const pieceState = new Map();
+function distance(a, b, c, d) {
+  return Math.hypot(a - c, b - d);
+}
 
-function initPieces(){
-  const vw = window.innerWidth;
-  const vh = window.innerHeight;
+function setScreen(screen) {
+  intro.classList.remove("active");
+  experience.classList.remove("active");
+  home.classList.remove("active");
+  screen.classList.add("active");
+}
+
+function svgPointToClient(cx, cy) {
+  const pt = svg.createSVGPoint();
+  pt.x = cx;
+  pt.y = cy;
+  const matrix = svg.getScreenCTM();
+  const p = pt.matrixTransform(matrix);
+  return { x: p.x, y: p.y };
+}
+
+function getPieceSize() {
+  const rect = svg.getBoundingClientRect();
+  return rect.width * 0.6; // 300 radius no SVG sobre 1000 viewBox = 60% do grid unit.
+}
+
+function applyPieceSize() {
   const size = getPieceSize();
-  const gap = Math.min(22, vw * 0.045);
-  const total = pieces.length * size + (pieces.length - 1) * gap;
-  const startX = (vw - total) / 2 + size/2;
-  const y = vh * 0.78;
-  pieces.forEach((piece, i)=>{
+  document.documentElement.style.setProperty("--piece-size", `${size}px`);
+  return size;
+}
+
+function layoutPieces() {
+  const size = applyPieceSize();
+  const gap = Math.min(18, window.innerWidth * 0.035);
+  const total = size * 4 + gap * 3;
+  const startX = (window.innerWidth - total) / 2;
+  const y = window.innerHeight - size - Math.max(96, window.innerHeight * 0.11);
+
+  state.items = pieces.map((el, i) => {
     const x = startX + i * (size + gap);
-    const jitter = (i - 1.5) * 2;
-    const data = {
-      el: piece,
-      key: piece.dataset.piece,
+    return {
+      el,
+      id: i,
+      slot: null,
+      locked: false,
       x,
-      y:y + Math.sin(i) * 8,
-      vx:jitter,
-      vy:0,
-      locked:false,
-      dragging:false,
-      dragOffsetX:0,
-      dragOffsetY:0,
+      y,
+      vx: (Math.random() - 0.5) * 0.3,
+      vy: (Math.random() - 0.5) * 0.3,
+      baseX: x,
+      baseY: y
     };
-    pieceState.set(piece, data);
-    renderPiece(data);
   });
+
+  state.items.forEach(renderItem);
 }
 
-function getPieceSize(){
-  const v = getComputedStyle(document.documentElement).getPropertyValue('--piece-size').trim();
-  return parseFloat(v) || 74;
+function renderItem(item) {
+  item.el.style.setProperty("--x", `${item.x}px`);
+  item.el.style.setProperty("--y", `${item.y}px`);
 }
 
-function updateRects(){
-  state.bounds = {w: window.innerWidth, h: window.innerHeight};
-  state.gridRect = gridWrap.getBoundingClientRect();
-}
-
-async function requestMotion(){
-  try{
-    if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
-      const res = await DeviceOrientationEvent.requestPermission();
-      if(res !== 'granted') return false;
+async function requestMotionPermission() {
+  try {
+    if (
+      typeof DeviceOrientationEvent !== "undefined" &&
+      typeof DeviceOrientationEvent.requestPermission === "function"
+    ) {
+      const result = await DeviceOrientationEvent.requestPermission();
+      return result === "granted";
     }
-    window.addEventListener('deviceorientation', onOrientation, true);
-    return true;
-  }catch(e){
-    return true;
+  } catch (e) {
+    return false;
   }
+  return true;
 }
 
-function onOrientation(e){
-  const gamma = clamp(e.gamma || 0, -30, 30);
-  const beta = clamp((e.beta || 0) - 45, -35, 35);
-  state.orientation.x = gamma / 30;
-  state.orientation.y = beta / 35;
+function startMotion() {
+  window.addEventListener("deviceorientation", (event) => {
+    if (state.completed) return;
+
+    const gamma = event.gamma || 0;
+    const beta = event.beta || 0;
+
+    state.ax = clamp(gamma / 45, -1, 1);
+    state.ay = clamp(beta / 45, -1, 1);
+  }, true);
 }
 
-startBtn.addEventListener('click', async()=>{
-  await requestMotion();
-  intro.classList.remove('is-active');
-  experience.classList.add('is-active');
-  state.running = true;
-  updateRects();
-  initPieces();
-  state.lastTime = performance.now();
-  requestAnimationFrame(loop);
-});
+function physicsTick() {
+  if (!experience.classList.contains("active") || state.completed) {
+    requestAnimationFrame(physicsTick);
+    return;
+  }
 
-function loop(now){
-  if(!state.running) return;
-  const dt = Math.min(32, now - state.lastTime) / 16.666;
-  state.lastTime = now;
-  updatePhysics(dt);
-  requestAnimationFrame(loop);
-}
-
-function updatePhysics(dt){
   const size = getPieceSize();
-  const radius = size / 2;
-  const floor = state.bounds.h - radius - 72;
-  const left = radius + 10;
-  const right = state.bounds.w - radius - 10;
-  const top = radius + 20;
-  const gravityX = state.orientation.x * 0.28;
-  const gravityY = state.orientation.y * 0.22;
+  const floorY = window.innerHeight - size - Math.max(96, window.innerHeight * 0.11);
+  const minX = 22;
+  const maxX = window.innerWidth - size - 22;
+  const minY = window.innerHeight * 0.58;
+  const maxY = window.innerHeight - size - Math.max(68, window.innerHeight * 0.08);
 
-  pieceState.forEach(data=>{
-    if(data.locked || data.dragging) return;
+  state.items.forEach((item) => {
+    if (item.locked || item === state.dragging) return;
 
-    data.vx += gravityX * dt;
-    data.vy += gravityY * dt;
+    item.vx += state.ax * 0.085;
+    item.vy += state.ay * 0.085;
 
-    data.vx *= 0.982;
-    data.vy *= 0.982;
+    item.vx += (item.baseX - item.x) * 0.0025;
+    item.vy += (floorY - item.y) * 0.0025;
 
-    data.x += data.vx * dt;
-    data.y += data.vy * dt;
+    item.vx *= 0.93;
+    item.vy *= 0.93;
 
-    if(data.x < left){ data.x = left; data.vx *= -0.45; }
-    if(data.x > right){ data.x = right; data.vx *= -0.45; }
-    if(data.y < top){ data.y = top; data.vy *= -0.45; }
-    if(data.y > floor){ data.y = floor; data.vy *= -0.42; data.vx *= 0.96; }
+    item.x += item.vx;
+    item.y += item.vy;
 
-    renderPiece(data);
+    if (item.x < minX) { item.x = minX; item.vx *= -0.42; }
+    if (item.x > maxX) { item.x = maxX; item.vx *= -0.42; }
+    if (item.y < minY) { item.y = minY; item.vy *= -0.35; }
+    if (item.y > maxY) { item.y = maxY; item.vy *= -0.35; }
+
+    renderItem(item);
   });
 
-  solveCircleCollisions();
+  requestAnimationFrame(physicsTick);
 }
 
-function solveCircleCollisions(){
-  const arr = [...pieceState.values()].filter(d=>!d.locked && !d.dragging);
-  const minDist = getPieceSize() + 4;
-  for(let i=0;i<arr.length;i++){
-    for(let j=i+1;j<arr.length;j++){
-      const a = arr[i], b = arr[j];
-      const dx = b.x-a.x, dy = b.y-a.y;
-      const dist = Math.hypot(dx,dy) || 1;
-      if(dist < minDist){
-        const overlap = (minDist - dist) / 2;
-        const nx = dx/dist, ny = dy/dist;
-        a.x -= nx*overlap; a.y -= ny*overlap;
-        b.x += nx*overlap; b.y += ny*overlap;
-        const avx = a.vx, avy = a.vy;
-        a.vx = b.vx * .62; a.vy = b.vy * .62;
-        b.vx = avx * .62; b.vy = avy * .62;
-        renderPiece(a); renderPiece(b);
-      }
+function nearestOpenSlot(item) {
+  const size = getPieceSize();
+  const centerX = item.x + size / 2;
+  const centerY = item.y + size / 2;
+  let best = null;
+
+  state.slots.forEach((slot, index) => {
+    if (slot.filled) return;
+    const p = svgPointToClient(slot.cx, slot.cy);
+    const d = distance(centerX, centerY, p.x, p.y);
+    if (!best || d < best.d) {
+      best = { index, d, x: p.x, y: p.y };
     }
-  }
-}
-
-function renderPiece(data){
-  data.el.style.transform = `translate3d(${data.x - getPieceSize()/2}px, ${data.y - getPieceSize()/2}px, 0)`;
-}
-
-pieces.forEach(piece=>{
-  piece.addEventListener('pointerdown', (e)=> startDrag(e, piece));
-});
-
-function startDrag(e, piece){
-  const data = pieceState.get(piece);
-  if(!data || data.locked || state.complete) return;
-  piece.setPointerCapture(e.pointerId);
-  data.dragging = true;
-  data.vx = 0; data.vy = 0;
-  data.dragOffsetX = e.clientX - data.x;
-  data.dragOffsetY = e.clientY - data.y;
-  piece.classList.add('is-dragging');
-  hint.classList.add('is-hidden');
-}
-
-window.addEventListener('pointermove', (e)=>{
-  pieceState.forEach(data=>{
-    if(!data.dragging) return;
-    data.x = e.clientX - data.dragOffsetX;
-    data.y = e.clientY - data.dragOffsetY;
-    renderPiece(data);
   });
-});
 
-window.addEventListener('pointerup', (e)=>{
-  pieceState.forEach(data=>{
-    if(!data.dragging) return;
-    data.dragging = false;
-    data.el.classList.remove('is-dragging');
-    trySnap(data);
-  });
-});
-
-function trySnap(data){
-  const slot = document.querySelector(slotMap[data.key]);
-  const rect = slot.getBoundingClientRect();
-  const target = {x:rect.left + rect.width/2, y:rect.top + rect.height/2};
-  const dist = Math.hypot(data.x-target.x, data.y-target.y);
-  const snapDistance = Math.max(62, getPieceSize() * 1.1);
-  if(dist < snapDistance){
-    data.locked = true;
-    data.x = target.x;
-    data.y = target.y;
-    data.el.classList.add('is-locked');
-    slot.classList.add('is-filled');
-    animateSnap(data.el);
-    renderPiece(data);
-    vibrate(45);
-    checkComplete();
-  }else{
-    data.vx = (Math.random()-.5) * 2;
-    data.vy = 1.5;
-  }
+  return best;
 }
 
-function animateSnap(el){
-  el.animate([
-    { transform: el.style.transform + ' scale(1.08)' },
-    { transform: el.style.transform + ' scale(.96)' },
-    { transform: el.style.transform + ' scale(1)' }
-  ], {duration:260, easing:'cubic-bezier(.2,.9,.2,1)'});
+function lockItem(item, slotIndex) {
+  const size = getPieceSize();
+  const slot = state.slots[slotIndex];
+  const p = svgPointToClient(slot.cx, slot.cy);
+
+  item.locked = true;
+  item.slot = slotIndex;
+  item.x = p.x - size / 2;
+  item.y = p.y - size / 2;
+  item.vx = 0;
+  item.vy = 0;
+
+  slot.filled = true;
+
+  item.el.classList.remove("dragging");
+  item.el.classList.add("locked");
+  renderItem(item);
+
+  targets[slotIndex].classList.add("locked");
+
+  if (navigator.vibrate) navigator.vibrate(45);
+
+  checkCompletion();
 }
 
-function checkComplete(){
-  const done = [...pieceState.values()].every(d=>d.locked);
-  if(!done || state.complete) return;
-  state.complete = true;
-  setTimeout(completeExperience, 420);
-}
+function checkCompletion() {
+  const done = state.slots.every(slot => slot.filled);
+  if (!done) return;
 
-function completeExperience(){
-  vibrate([40,35,80]);
-  symbolFill.classList.add('is-visible');
-  centerLight.classList.add('is-on');
-  topMessage.classList.add('is-visible');
+  state.completed = true;
+  document.body.classList.add("completed");
 
-  setTimeout(()=>{
-    stage.style.transform = 'scale(4.6)';
-    stage.style.opacity = '.98';
-  }, 1200);
+  setTimeout(() => {
+    mark.classList.add("reveal");
+    whiteCore.classList.add("active");
+    if (navigator.vibrate) navigator.vibrate([50, 40, 70]);
+  }, 220);
 
-  setTimeout(()=>{
-    const wipe = document.createElement('div');
-    wipe.className = 'white-wipe';
-    document.body.appendChild(wipe);
-  }, 1650);
+  setTimeout(() => {
+    message.innerHTML = "Você já chegou até aqui.<br>Agora é hora de buscar novos horizontes.";
+    message.classList.add("show");
+  }, 950);
 
-  setTimeout(()=>{
-    site.classList.add('is-active');
+  setTimeout(() => {
+    document.body.classList.add("zooming");
+    whiteTransition.classList.add("go");
   }, 2300);
 
-  setTimeout(()=>{
-    experience.classList.remove('is-active');
-    const wipe = document.querySelector('.white-wipe');
-    if(wipe) wipe.remove();
-  }, 2900);
+  setTimeout(() => {
+    setScreen(home);
+  }, 3450);
 }
 
-function vibrate(pattern){
-  if('vibrate' in navigator) navigator.vibrate(pattern);
+function bindDrag() {
+  pieces.forEach((el, id) => {
+    el.addEventListener("pointerdown", (event) => {
+      const item = state.items[id];
+      if (!item || item.locked || state.completed) return;
+
+      el.setPointerCapture(event.pointerId);
+      state.dragging = item;
+      item.dragOffsetX = event.clientX - item.x;
+      item.dragOffsetY = event.clientY - item.y;
+      item.vx = 0;
+      item.vy = 0;
+      el.classList.add("dragging");
+    });
+
+    el.addEventListener("pointermove", (event) => {
+      const item = state.items[id];
+      if (state.dragging !== item || item.locked) return;
+
+      item.x = event.clientX - item.dragOffsetX;
+      item.y = event.clientY - item.dragOffsetY;
+
+      const near = nearestOpenSlot(item);
+      if (near && near.d < getPieceSize() * 0.55) {
+        const targetX = near.x - getPieceSize() / 2;
+        const targetY = near.y - getPieceSize() / 2;
+        item.x += (targetX - item.x) * 0.16;
+        item.y += (targetY - item.y) * 0.16;
+      }
+
+      renderItem(item);
+    });
+
+    el.addEventListener("pointerup", () => {
+      const item = state.items[id];
+      if (state.dragging !== item || item.locked) return;
+
+      const near = nearestOpenSlot(item);
+      el.classList.remove("dragging");
+      state.dragging = null;
+
+      if (near && near.d < getPieceSize() * 0.42) {
+        lockItem(item, near.index);
+      }
+    });
+
+    el.addEventListener("pointercancel", () => {
+      const item = state.items[id];
+      if (state.dragging === item) {
+        el.classList.remove("dragging");
+        state.dragging = null;
+      }
+    });
+  });
 }
 
-function clamp(n,min,max){ return Math.max(min, Math.min(max,n)); }
-
-window.addEventListener('resize', ()=>{
-  updateRects();
-  if(state.running && !state.complete){
-    initPieces();
-  }
+startBtn.addEventListener("click", async () => {
+  await requestMotionPermission();
+  setScreen(experience);
+  layoutPieces();
+  startMotion();
 });
 
-// Desktop fallback: subtle artificial motion before any sensor data arrives.
-setInterval(()=>{
-  if(!state.running || state.complete) return;
-  if(Math.abs(state.orientation.x) > .01 || Math.abs(state.orientation.y) > .01) return;
-  const t = performance.now()/1000;
-  state.orientation.x = Math.sin(t*.8)*.18;
-  state.orientation.y = Math.cos(t*.7)*.10;
-}, 120);
+window.addEventListener("resize", () => {
+  if (!experience.classList.contains("active")) return;
+
+  const oldLocked = state.items.filter(item => item.locked).map(item => item.id);
+  layoutPieces();
+  oldLocked.forEach(id => {
+    const item = state.items[id];
+    const slotIndex = state.slots.findIndex((slot, i) => slot.filled && !state.items.some(other => other !== item && other.slot === i));
+    if (slotIndex >= 0) {
+      const p = svgPointToClient(state.slots[slotIndex].cx, state.slots[slotIndex].cy);
+      const size = getPieceSize();
+      item.locked = true;
+      item.slot = slotIndex;
+      item.x = p.x - size / 2;
+      item.y = p.y - size / 2;
+      item.el.classList.add("locked");
+      renderItem(item);
+    }
+  });
+});
+
+bindDrag();
+requestAnimationFrame(physicsTick);

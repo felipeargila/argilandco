@@ -1,21 +1,21 @@
-# Argila&Co Experience V3
+# Argila&Co Experience V3.1
 
-Protótipo estático para GitHub Pages.
+Correção da geometria do símbolo.
 
-## Como publicar
+## O que mudou
 
-1. Substitua os arquivos do repositório pelos arquivos deste ZIP.
-2. Faça commit e push.
-3. Abra pelo GitHub Pages em HTTPS.
+- Grid 5x5 real.
+- Quatro círculos com raio proporcional exato.
+- Centros posicionados matematicamente:
+  - superior esquerdo: 300, 300
+  - superior direito: 700, 300
+  - inferior direito: 700, 700
+  - inferior esquerdo: 300, 700
+- Símbolo revelado pelas interseções dos círculos.
+- Círculos começam na base da tela.
+- Peças soltas respondem ao sensor do celular.
+- Drag, snap, vibração e transição branca.
 
-## Experiência
+## Publicação
 
-- Intro com CTA "Avançar".
-- Quatro círculos: Estratégia, Identidade, Experiência e Comunicação.
-- Círculos soltos respondem sutilmente à inclinação do telefone.
-- Usuário arrasta cada círculo para sua posição no grid.
-- Snap, vibração, preenchimento do símbolo e zoom branco para a home.
-
-## Observação iPhone
-
-O acesso aos sensores depende de HTTPS e de permissão após toque do usuário.
+Substitua os arquivos do repositório GitHub Pages por estes arquivos.
