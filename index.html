@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Experiência de Marca | Protótipo</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="app">
+    <section class="intro" id="intro">
+      <p class="eyebrow">Protótipo interativo</p>
+      <h1>Sua marca perdeu o eixo.</h1>
+      <p class="lead">Incline o telefone para reposicionar o núcleo.</p>
+      <button id="startButton" class="primary-button">Começar experiência</button>
+      <p class="hint">No computador, clique e arraste o núcleo.</p>
+    </section>
+
+    <section class="experience hidden" id="experience" aria-label="Experiência interativa">
+      <div class="status" id="status">Incline o telefone até encontrar o centro.</div>
+
+      <div class="compass-wrap">
+        <div class="compass" id="compass">
+          <div class="ring ring-outer"></div>
+          <div class="ring ring-inner"></div>
+          <div class="axis axis-x"></div>
+          <div class="axis axis-y"></div>
+          <div class="north">N</div>
+          <div class="target" id="target"></div>
+          <div class="core" id="core" role="img" aria-label="Núcleo solto"></div>
+        </div>
+      </div>
+
+      <div class="complete hidden" id="complete">
+        <p>O eixo foi encontrado.</p>
+        <button class="secondary-button" id="resetButton">Testar de novo</button>
+      </div>
+    </section>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
