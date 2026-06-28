@@ -1,67 +1,61 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Argila&Co | Experiência</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <main id="app">
-    <section id="intro" class="screen screen--active" aria-label="Introdução">
-      <div class="intro__content">
-        <p class="eyebrow">Argila&Co</p>
+    <section id="intro" class="screen is-active">
+      <div class="intro-copy">
         <h1>
           <span>Algumas empresas acompanham o mercado.</span>
           <span>Outras definem para onde ele vai.</span>
         </h1>
-        <button id="startButton" class="text-button" type="button">Avançar</button>
-        <p id="permissionHint" class="permission-hint" aria-live="polite"></p>
+        <button id="startBtn" class="plain-button" type="button">Avançar</button>
       </div>
     </section>
 
-    <section id="experience" class="screen" aria-label="Bússola interativa">
-      <div id="completionText" class="completion-text" aria-live="polite">
-        <span>Você já chegou até aqui.</span>
-        <span>Agora é hora de buscar novos horizontes.</span>
+    <section id="experience" class="screen" aria-label="Experiência interativa">
+      <div class="top-message" id="topMessage">
+        <h2>Você já chegou até aqui.</h2>
+        <p>Agora é hora de buscar novos horizontes.</p>
       </div>
 
-      <div id="stage" class="stage">
-        <div id="compass" class="compass" aria-label="Bússola de marca">
-          <span class="compass__label compass__label--top">NEGÓCIO</span>
-          <span class="compass__label compass__label--left">MARCA</span>
-          <span class="compass__label compass__label--right">INOVAÇÃO</span>
-          <span class="compass__label compass__label--bottom">CULTURA</span>
-
-          <div class="compass__ring compass__ring--outer"></div>
-          <div class="compass__ring compass__ring--middle"></div>
-          <div class="compass__ring compass__ring--inner"></div>
-
-          <div class="compass__tick compass__tick--top"></div>
-          <div class="compass__tick compass__tick--right"></div>
-          <div class="compass__tick compass__tick--bottom"></div>
-          <div class="compass__tick compass__tick--left"></div>
-
-          <div id="target" class="target"></div>
-          <div id="axis" class="axis" role="img" aria-label="Eixo móvel">
-            <div class="axis__line"></div>
-            <div class="axis__core"></div>
+      <div class="stage" id="stage">
+        <div class="grid-wrap" id="gridWrap">
+          <div class="grid-lines" aria-hidden="true"></div>
+          <div class="symbol-fill" id="symbolFill" aria-hidden="true">
+            <div class="fill-circle fill-a"></div>
+            <div class="fill-circle fill-b"></div>
+            <div class="fill-circle fill-c"></div>
+            <div class="fill-circle fill-d"></div>
           </div>
+          <div class="center-light" id="centerLight" aria-hidden="true"></div>
+          <div class="slot slot-a" data-slot="estrategia"><span>Estratégia</span></div>
+          <div class="slot slot-b" data-slot="identidade"><span>Identidade</span></div>
+          <div class="slot slot-c" data-slot="experiencia"><span>Experiência</span></div>
+          <div class="slot slot-d" data-slot="comunicacao"><span>Comunicação</span></div>
         </div>
+
+        <div class="piece piece-a" data-piece="estrategia"><span>Estratégia</span></div>
+        <div class="piece piece-b" data-piece="identidade"><span>Identidade</span></div>
+        <div class="piece piece-c" data-piece="experiencia"><span>Experiência</span></div>
+        <div class="piece piece-d" data-piece="comunicacao"><span>Comunicação</span></div>
       </div>
 
-      <p id="instruction" class="instruction">Incline o telefone para posicionar o eixo.</p>
+      <p class="hint" id="hint">Incline o telefone. Toque, arraste e posicione cada círculo.</p>
     </section>
 
-    <section id="website" class="website" aria-label="Site">
-      <div class="website__content">
-        <p class="eyebrow eyebrow--dark">Sistema estrutural de diferenciação</p>
-        <h2>Branding para empresas que querem caminhar para outros níveis.</h2>
-        <p>Estratégia, identidade e experiência conectadas para construir marcas mais claras, fortes e difíceis de ignorar.</p>
+    <section id="site" class="screen website">
+      <div class="website-content">
+        <p class="eyebrow">Argila&Co</p>
+        <h2>Sistema estrutural de diferenciação.</h2>
+        <p>Estratégia, identidade, experiência e comunicação alinhadas para marcas que querem caminhar para outros níveis.</p>
       </div>
     </section>
-
-    <div id="whiteTransition" class="white-transition"></div>
   </main>
 
   <script src="script.js"></script>
