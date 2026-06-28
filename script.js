@@ -181,19 +181,24 @@ function checkComplete() {
 
   setTimeout(() => {
     document.body.classList.add("copy-phase");
-    message.innerHTML=`<span class="message-title">Marcas criam<br>realidades.<br>Eu crio marcas.</span>`;
+    message.innerHTML=`<span class="message-title">Marcas criam realidades.<br>Eu crio marcas.</span>`;
     message.classList.add("show");
   }, 1150);
 
-  // tempo de leitura antes da transição feita pelo próprio símbolo
+  // tempo de leitura antes da tela rolar sozinha para o menu
   setTimeout(() => {
-    document.body.classList.add("zooming");
-  }, 4200);
+    revealHome();
+  }, 3800);
+}
 
-  // quando o símbolo já cobriu a tela, entra o menu final
+function revealHome() {
+  document.body.classList.add("home-revealing");
+  home.classList.add("active");
+
   setTimeout(() => {
-    setScreen(home);
-  }, 5350);
+    experience.classList.remove("active");
+    document.body.classList.add("home-final");
+  }, 1350);
 }
 
 function bindPiece(item) {
