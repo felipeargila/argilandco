@@ -88,7 +88,7 @@ function createPieces() {
       x: window.innerWidth / 2,
       y: -r - (index * r * 0.28),
       baseX: window.innerWidth * (0.22 + index * 0.185),
-      baseY: window.innerHeight - r - Math.max(74, window.innerHeight * 0.07) + ((index % 2) ? 8 : -5),
+      baseY: window.innerHeight - r - Math.max(132, window.innerHeight * 0.16) + ((index % 2) ? 8 : -5),
       vx: 0,
       vy: 0,
       locked: false,
@@ -181,19 +181,29 @@ function checkComplete() {
   }, 260);
 
   setTimeout(() => {
-    message.innerHTML = "Você já chegou até aqui.<br>Agora é hora de buscar novos horizontes.";
+    document.body.classList.add("copy-phase");
+    message.innerHTML = `
+      <span class="message-title">Marcas criam realidades.<br>Eu crio marcas.</span>
+      <span class="message-small">Essa foi a maneira mais simples que encontrei de mostrar que uma marca é muito mais do que um logotipo.</span>
+    `;
     message.classList.add("show");
-    setTimeout(()=>{const p=document.createElement("div");p.id="subcopy";p.innerText="Essa foi a maneira mais simples que encontrei de mostrar que uma marca é muito mais do que um logotipo.";Object.assign(p.style,{position:"fixed",left:"50%",top:"28%",transform:"translateX(-50%)",width:"min(720px,calc(100vw - 40px))",textAlign:"center",color:"rgba(245,241,232,.62)",fontSize:"18px",lineHeight:"1.5",transition:"opacity .4s"});document.body.appendChild(p);setTimeout(()=>{p.style.opacity=0;setTimeout(()=>{p.remove();const nav=document.createElement("nav");nav.id="mainNav";nav.innerHTML="<a>Soluções</a><a>Sobre</a><a>Contato</a>";Object.assign(nav.style,{position:"fixed",left:"50%",top:"56%",transform:"translateX(-50%)",display:"flex",flexDirection:"column",gap:"18px",alignItems:"center",fontSize:"30px",fontWeight:"400",opacity:"0",transition:"opacity .5s"});document.body.appendChild(nav);requestAnimationFrame(()=>nav.style.opacity=1);},500)},3000)},100);
-  }, 980);
+  }, 1150);
 
+  // tempo de leitura antes da transição branca
   setTimeout(() => {
     document.body.classList.add("zooming");
     whiteOut.classList.add("go");
-  }, 2450);
+  }, 6200);
 
+  // home/menu aparece atrás da tela branca
   setTimeout(() => {
     setScreen(home);
-  }, 3580);
+  }, 7200);
+
+  // branco desaparece, mantendo a frase principal em preto e revelando o menu
+  setTimeout(() => {
+    whiteOut.classList.add("fade");
+  }, 7400);
 }
 
 function bindPiece(item) {
@@ -248,7 +258,7 @@ function animate(timestamp) {
     const r = currentRadius();
     const minX = r + 12;
     const maxX = window.innerWidth - r - 12;
-    const maxY = window.innerHeight - r - Math.max(34, window.innerHeight * 0.035);
+    const maxY = window.innerHeight - r - Math.max(124, window.innerHeight * 0.14);
     const minY = window.innerHeight * 0.52;
 
     state.items.forEach(item => {
