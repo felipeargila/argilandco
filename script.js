@@ -182,10 +182,7 @@ function checkComplete() {
 
   setTimeout(() => {
     document.body.classList.add("copy-phase");
-    message.innerHTML = `
-      <span class="message-title">Marcas criam realidades.<br>Eu crio marcas.</span>
-      <span class="message-small"></span>
-    `;
+    message.innerHTML=`<span class="message-title">Marcas criam realidades.<br>Eu crio marcas.</span>`;
     message.classList.add("show");
   }, 1150);
 
@@ -193,17 +190,17 @@ function checkComplete() {
   setTimeout(() => {
     document.body.classList.add("zooming");
     whiteOut.classList.add("go");
-  }, 6200);
+  }, 4200);
 
   // home/menu aparece atrás da tela branca
   setTimeout(() => {
     setScreen(home);
-  }, 7200);
+  }, 5200);
 
   // branco desaparece, mantendo a frase principal em preto e revelando o menu
   setTimeout(() => {
     whiteOut.classList.add("fade");
-  }, 7400);
+  }, 5500);
 }
 
 function bindPiece(item) {
