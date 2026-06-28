@@ -183,6 +183,7 @@ function checkComplete() {
   setTimeout(() => {
     message.innerHTML = "Você já chegou até aqui.<br>Agora é hora de buscar novos horizontes.";
     message.classList.add("show");
+    setTimeout(()=>{const p=document.createElement("div");p.id="subcopy";p.innerText="Essa foi a maneira mais simples que encontrei de mostrar que uma marca é muito mais do que um logotipo.";Object.assign(p.style,{position:"fixed",left:"50%",top:"28%",transform:"translateX(-50%)",width:"min(720px,calc(100vw - 40px))",textAlign:"center",color:"rgba(245,241,232,.62)",fontSize:"18px",lineHeight:"1.5",transition:"opacity .4s"});document.body.appendChild(p);setTimeout(()=>{p.style.opacity=0;setTimeout(()=>{p.remove();const nav=document.createElement("nav");nav.id="mainNav";nav.innerHTML="<a>Soluções</a><a>Sobre</a><a>Contato</a>";Object.assign(nav.style,{position:"fixed",left:"50%",top:"56%",transform:"translateX(-50%)",display:"flex",flexDirection:"column",gap:"18px",alignItems:"center",fontSize:"30px",fontWeight:"400",opacity:"0",transition:"opacity .5s"});document.body.appendChild(nav);requestAnimationFrame(()=>nav.style.opacity=1);},500)},3000)},100);
   }, 980);
 
   setTimeout(() => {
