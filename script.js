@@ -184,7 +184,7 @@ function checkComplete() {
     document.body.classList.add("copy-phase");
     message.innerHTML = `
       <span class="message-title">Marcas criam realidades.<br>Eu crio marcas.</span>
-      <span class="message-small">Essa foi a maneira mais simples que encontrei de mostrar que uma marca é muito mais do que um logotipo.</span>
+      <span class="message-small"></span>
     `;
     message.classList.add("show");
   }, 1150);

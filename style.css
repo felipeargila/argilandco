@@ -355,3 +355,5 @@ body.zooming #stage {
 @media (max-height: 720px) {
   #stage { top: 38%; width: min(68vw, 360px); }
 }
+
+#instruction strong{display:block;font-size:16px;font-weight:500;margin-bottom:8px}#instruction span{opacity:.7}#finalMessage,#menu{max-width:720px;margin:0 auto;text-align:left}.menu-item{font-size:42px;font-weight:500;line-height:1.3}
