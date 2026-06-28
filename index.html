@@ -1,95 +1,80 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>Argila&Co Experience V3.1</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Argila&Co Symbol Experience</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <main id="app">
     <section id="intro" class="screen active">
-      <div class="intro-copy">
-        <h1>
-          <span>Algumas empresas acompanham o mercado.</span>
-          <span>Outras definem para onde ele vai.</span>
-        </h1>
-        <button id="startBtn" type="button">Avançar</button>
-      </div>
+      <h1>
+        <span>Algumas empresas acompanham o mercado.</span>
+        <span>Outras definem para onde ele vai.</span>
+      </h1>
+      <button id="startBtn">Avançar</button>
     </section>
 
     <section id="experience" class="screen">
-      <div id="message" aria-live="polite"></div>
+      <div id="message"></div>
 
-      <div class="stage-wrap">
-        <svg id="symbolSvg" viewBox="0 0 1000 1000" aria-label="Construção do símbolo Argila&Co">
-          <defs>
-            <filter id="softGlow" x="-30%" y="-30%" width="160%" height="160%">
-              <feGaussianBlur stdDeviation="4" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-          </defs>
-
-          <!-- Grid matemático 5x5 -->
+      <div id="symbolStage">
+        <svg id="symbolSvg" viewBox="0 0 500 500" aria-label="Construção geométrica do símbolo">
           <g id="grid">
-            <line x1="0" y1="0" x2="0" y2="1000" />
-            <line x1="200" y1="0" x2="200" y2="1000" />
-            <line x1="400" y1="0" x2="400" y2="1000" />
-            <line x1="600" y1="0" x2="600" y2="1000" />
-            <line x1="800" y1="0" x2="800" y2="1000" />
-            <line x1="1000" y1="0" x2="1000" y2="1000" />
+            <line x1="0" y1="0" x2="500" y2="0" />
+            <line x1="0" y1="100" x2="500" y2="100" />
+            <line x1="0" y1="200" x2="500" y2="200" />
+            <line x1="0" y1="300" x2="500" y2="300" />
+            <line x1="0" y1="400" x2="500" y2="400" />
+            <line x1="0" y1="500" x2="500" y2="500" />
 
-            <line x1="0" y1="0" x2="1000" y2="0" />
-            <line x1="0" y1="200" x2="1000" y2="200" />
-            <line x1="0" y1="400" x2="1000" y2="400" />
-            <line x1="0" y1="600" x2="1000" y2="600" />
-            <line x1="0" y1="800" x2="1000" y2="800" />
-            <line x1="0" y1="1000" x2="1000" y2="1000" />
+            <line x1="0" y1="0" x2="0" y2="500" />
+            <line x1="100" y1="0" x2="100" y2="500" />
+            <line x1="200" y1="0" x2="200" y2="500" />
+            <line x1="300" y1="0" x2="300" y2="500" />
+            <line x1="400" y1="0" x2="400" y2="500" />
+            <line x1="500" y1="0" x2="500" y2="500" />
           </g>
 
-          <!-- Alvos exatos: raio 300, centros: 300/300, 700/300, 700/700, 300/700 -->
-          <g id="targets">
-            <circle class="target" data-slot="0" cx="300" cy="300" r="300" />
-            <circle class="target" data-slot="1" cx="700" cy="300" r="300" />
-            <circle class="target" data-slot="2" cx="700" cy="700" r="300" />
-            <circle class="target" data-slot="3" cx="300" cy="700" r="300" />
+          <g id="targetCircles">
+            <circle data-slot="0" cx="150" cy="150" r="150" />
+            <circle data-slot="1" cx="350" cy="150" r="150" />
+            <circle data-slot="2" cx="350" cy="350" r="150" />
+            <circle data-slot="3" cx="150" cy="350" r="150" />
           </g>
 
-          <!-- Interseções reais entre os círculos: símbolo final -->
-          <g id="mark">
-            <!-- Lente superior: interseção dos dois círculos superiores -->
-            <path id="petalTop" d="M 500 76.393 C 667.0 160.0 667.0 440.0 500 523.607 C 333.0 440.0 333.0 160.0 500 76.393 Z" />
-            <!-- Lente esquerda: interseção dos dois círculos da esquerda -->
-            <path id="petalLeft" d="M 76.393 500 C 160.0 333.0 440.0 333.0 523.607 500 C 440.0 667.0 160.0 667.0 76.393 500 Z" />
-            <!-- Lente direita: interseção dos dois círculos da direita -->
-            <path id="petalRight" d="M 476.393 500 C 560.0 333.0 840.0 333.0 923.607 500 C 840.0 667.0 560.0 667.0 476.393 500 Z" />
+          <g id="finalMark">
+            <!-- Interseção real dos círculos superiores -->
+            <path id="petalTop" d="M250 38.1966 A150 150 0 0 1 250 261.8034 A150 150 0 0 1 250 38.1966 Z" />
+            <!-- Interseção real dos círculos da esquerda -->
+            <path id="petalLeft" d="M38.1966 250 A150 150 0 0 1 261.8034 250 A150 150 0 0 1 38.1966 250 Z" />
+            <!-- Interseção real dos círculos da direita -->
+            <path id="petalRight" d="M238.1966 250 A150 150 0 0 1 461.8034 250 A150 150 0 0 1 238.1966 250 Z" />
           </g>
 
-          <circle id="whiteCore" cx="500" cy="500" r="18" />
+          <circle id="zoomCore" cx="250" cy="250" r="8" />
         </svg>
       </div>
 
-      <div id="piecesLayer">
-        <div class="piece" data-piece="0" data-label="Estratégia"></div>
-        <div class="piece" data-piece="1" data-label="Identidade"></div>
-        <div class="piece" data-piece="2" data-label="Experiência"></div>
-        <div class="piece" data-piece="3" data-label="Comunicação"></div>
+      <div id="pieceLayer">
+        <button class="piece" data-piece="0" data-label="Estratégia" aria-label="Estratégia"></button>
+        <button class="piece" data-piece="1" data-label="Identidade" aria-label="Identidade"></button>
+        <button class="piece" data-piece="2" data-label="Experiência" aria-label="Experiência"></button>
+        <button class="piece" data-piece="3" data-label="Comunicação" aria-label="Comunicação"></button>
       </div>
 
       <p id="instruction">Incline o telefone. Toque, arraste e posicione cada círculo.</p>
     </section>
 
     <section id="home" class="screen">
-      <div class="home-copy">
+      <div>
         <p>Argila&Co</p>
         <h2>Sistema estrutural de diferenciação.</h2>
       </div>
     </section>
 
-    <div id="whiteTransition"></div>
+    <div id="whiteOut"></div>
   </main>
 
   <script src="script.js"></script>
